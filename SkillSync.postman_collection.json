@@ -1,0 +1,203 @@
+{
+  "info": {
+    "name": "SkillSync API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "token", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Jane Doe\",\n  \"rollNumber\": \"CS-001\",\n  \"email\": \"jane@skillsync.com\",\n  \"password\": \"password123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane@skillsync.com\",\n  \"password\": \"password123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/forgot-password", "host": ["{{baseUrl}}"], "path": ["api", "auth", "forgot-password"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane@skillsync.com\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/reset-password/{{resetToken}}", "host": ["{{baseUrl}}"], "path": ["api", "auth", "reset-password", "{{resetToken}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"newPassword123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api", "auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "Create Project",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/projects", "host": ["{{baseUrl}}"], "path": ["api", "projects"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"AI Tutor\",\n  \"description\": \"Build an AI tutor\",\n  \"requiredRoles\": [\n    { \"roleName\": \"Backend\", \"requiredSkills\": [\"Node.js\"], \"numberOfOpenings\": 1 }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "List Projects",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/projects", "host": ["{{baseUrl}}"], "path": ["api", "projects"] }
+          }
+        },
+        {
+          "name": "Match Projects",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/projects/match/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "projects", "match", "{{userId}}"] }
+          }
+        },
+        {
+          "name": "Get Project",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/projects/{{projectId}}", "host": ["{{baseUrl}}"], "path": ["api", "projects", "{{projectId}}"] }
+          }
+        },
+        {
+          "name": "Join Project",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/projects/{{projectId}}/join", "host": ["{{baseUrl}}"], "path": ["api", "projects", "{{projectId}}", "join"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleName\": \"Backend\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Respond to Join",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/projects/{{projectId}}/respond", "host": ["{{baseUrl}}"], "path": ["api", "projects", "{{projectId}}", "respond"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestId\": \"{{requestId}}\",\n  \"action\": \"accept\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Complete Project",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/api/projects/{{projectId}}/complete", "host": ["{{baseUrl}}"], "path": ["api", "projects", "{{projectId}}", "complete"] }
+          }
+        },
+        {
+          "name": "Archive Project",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/api/projects/{{projectId}}/archive", "host": ["{{baseUrl}}"], "path": ["api", "projects", "{{projectId}}", "archive"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Skill Exchange",
+      "item": [
+        {
+          "name": "Create Exchange",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/exchange", "host": ["{{baseUrl}}"], "path": ["api", "exchange"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetUser\": \"{{targetUserId}}\",\n  \"skillsOffered\": [\"React\"],\n  \"skillsWanted\": [\"Node.js\"],\n  \"message\": \"Let's exchange skills\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Browse Exchanges",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/exchange/browse", "host": ["{{baseUrl}}"], "path": ["api", "exchange", "browse"] }
+          }
+        },
+        {
+          "name": "Get User Exchanges",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/exchange/user/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "exchange", "user", "{{userId}}"] }
+          }
+        },
+        {
+          "name": "Respond to Exchange",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/exchange/{{exchangeId}}/respond", "host": ["{{baseUrl}}"], "path": ["api", "exchange", "{{exchangeId}}", "respond"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"accept\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Complete Exchange",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/api/exchange/{{exchangeId}}/complete", "host": ["{{baseUrl}}"], "path": ["api", "exchange", "{{exchangeId}}", "complete"] }
+          }
+        }
+      ]
+    }
+  ]
+}
+

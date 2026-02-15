@@ -83,6 +83,11 @@ RESET_PASSWORD_URL
 
 ## Endpoint Documentation
 
+All responses follow:
+```json
+{ "success": true, "message": "", "data": {} }
+```
+
 ### Auth
 - **POST** `/api/auth/register`
   - Headers: `Content-Type: application/json`
@@ -97,11 +102,7 @@ RESET_PASSWORD_URL
     ```
   - Response:
     ```json
-    {
-      "success": true,
-      "message": "Registration successful",
-      "data": { "token": "<jwt>", "user": {} }
-    }
+    { "success": true, "message": "Registration successful", "data": { "token": "<jwt>", "user": {} } }
     ```
 
 - **POST** `/api/auth/login`
@@ -112,7 +113,7 @@ RESET_PASSWORD_URL
     ```
   - Response:
     ```json
-    { "success": true, "message": "Login successful", "data": { "token": "<jwt>" } }
+    { "success": true, "message": "Login successful", "data": { "token": "<jwt>", "user": {} } }
     ```
 
 - **POST** `/api/auth/forgot-password`
@@ -137,16 +138,24 @@ RESET_PASSWORD_URL
     { "success": true, "message": "Password reset successful", "data": { "token": "<jwt>" } }
     ```
 
-- **GET** `/api/auth/me`
+- **GET** `/api/auth/me` (protected)
   - Headers: `Authorization: Bearer <token>`
   - Response:
     ```json
     { "success": true, "message": "Profile fetched", "data": { "user": {} } }
     ```
 
+### Users
+- **GET** `/api/users/:id` (protected)
+  - Headers: `Authorization: Bearer <token>`
+  - Response:
+    ```json
+    { "success": true, "message": "User fetched", "data": { "user": {} } }
+    ```
+
 ### Projects
 - **POST** `/api/projects` (protected)
-  - Headers: `Authorization: Bearer <token>`
+  - Headers: `Content-Type: application/json`, `Authorization: Bearer <token>`
   - Body:
     ```json
     {
@@ -157,37 +166,116 @@ RESET_PASSWORD_URL
       ]
     }
     ```
+  - Response:
+    ```json
+    { "success": true, "message": "Project created", "data": { "project": {} } }
+    ```
 
 - **GET** `/api/projects`
+  - Headers: none
+  - Response:
+    ```json
+    { "success": true, "message": "Projects fetched", "data": { "projects": [] } }
+    ```
+
 - **GET** `/api/projects/match/:userId`
+  - Headers: none
+  - Response:
+    ```json
+    { "success": true, "message": "Matched projects fetched", "data": { "projects": [] } }
+    ```
+
 - **GET** `/api/projects/:id`
+  - Headers: optional `Authorization: Bearer <token>` (for contact visibility)
+  - Response:
+    ```json
+    { "success": true, "message": "Project fetched", "data": { "project": {} } }
+    ```
+
 - **POST** `/api/projects/:id/join` (protected)
+  - Headers: `Content-Type: application/json`, `Authorization: Bearer <token>`
   - Body:
     ```json
     { "roleName": "Backend" }
     ```
-- **PUT** `/api/projects/:id/respond` (protected)
+  - Response:
+    ```json
+    { "success": true, "message": "Join request submitted", "data": { "projectId": "<id>" } }
+    ```
+
+- **PUT** `/api/projects/:id/respond` (protected, owner only)
+  - Headers: `Content-Type: application/json`, `Authorization: Bearer <token>`
   - Body:
     ```json
     { "requestId": "<requestId>", "action": "accept" }
     ```
-- **PUT** `/api/projects/:id/complete` (protected)
-- **PUT** `/api/projects/:id/archive` (protected)
+  - Response:
+    ```json
+    { "success": true, "message": "Request updated", "data": { "projectId": "<id>" } }
+    ```
+
+- **PUT** `/api/projects/:id/complete` (protected, owner only)
+  - Headers: `Authorization: Bearer <token>`
+  - Response:
+    ```json
+    { "success": true, "message": "Project completed", "data": { "projectId": "<id>" } }
+    ```
+
+- **PUT** `/api/projects/:id/archive` (protected, owner only)
+  - Headers: `Authorization: Bearer <token>`
+  - Response:
+    ```json
+    { "success": true, "message": "Project archived", "data": { "projectId": "<id>" } }
+    ```
 
 ### Skill Exchange
 - **POST** `/api/exchange` (protected)
+  - Headers: `Content-Type: application/json`, `Authorization: Bearer <token>`
   - Body:
     ```json
-    { "targetUser": "<userId>", "skillsOffered": ["React"], "skillsWanted": ["Node.js"] }
+    {
+      "targetUser": "<userId>",
+      "skillsOffered": ["React"],
+      "skillsWanted": ["Node.js"],
+      "message": "Let's exchange skills"
+    }
     ```
+  - Response:
+    ```json
+    { "success": true, "message": "Exchange request created", "data": { "exchange": {} } }
+    ```
+
 - **GET** `/api/exchange/browse`
+  - Headers: none
+  - Response:
+    ```json
+    { "success": true, "message": "Exchange requests fetched", "data": { "exchanges": [] } }
+    ```
+
 - **GET** `/api/exchange/user/:id` (protected)
+  - Headers: `Authorization: Bearer <token>`
+  - Response:
+    ```json
+    { "success": true, "message": "User exchanges fetched", "data": { "exchanges": [] } }
+    ```
+
 - **PUT** `/api/exchange/:id/respond` (protected)
+  - Headers: `Content-Type: application/json`, `Authorization: Bearer <token>`
   - Body:
     ```json
     { "action": "accept" }
     ```
+  - Response:
+    ```json
+    { "success": true, "message": "Exchange updated", "data": { "exchangeId": "<id>" } }
+    ```
+
 - **PUT** `/api/exchange/:id/complete` (protected)
+  - Headers: `Authorization: Bearer <token>`
+  - Response:
+    ```json
+    { "success": true, "message": "Exchange completed", "data": { "exchangeId": "<id>" } }
+    ```
 
 ## Postman Testing Guide
 1. Import `SkillSync.postman_collection.json`.

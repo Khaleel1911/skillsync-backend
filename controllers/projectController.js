@@ -21,14 +21,34 @@ const createProject = async (req, res, next) => {
 
 const listProjects = async (req, res, next) => {
   try {
-    const projects = await Project.find({
-      projectStatus: "Open",
-      isVisible: true,
-    })
+    const includeAll = req.query.includeAll === "true";
+    const statusParam = (req.query.status || "").toLowerCase();
+    const statusMap = {
+      open: "Open",
+      "in-progress": "In Progress",
+      "in progress": "In Progress",
+      completed: "Completed",
+      archived: "Archived",
+    };
+    const normalizedStatus = statusMap[statusParam];
+
+    const query = { isVisible: true };
+    if (normalizedStatus) {
+      query.projectStatus = normalizedStatus;
+    } else if (!includeAll) {
+      query.projectStatus = "Open";
+    }
+
+    const projects = await Project.find(query)
       .populate("owner", "fullName profileImage")
       .sort({ createdAt: -1 });
 
-    const visibleProjects = projects.filter((project) => project.hasOpenRole());
+    const shouldFilterOpenRoles =
+      query.projectStatus === "Open" || (!includeAll && !normalizedStatus);
+    const visibleProjects = shouldFilterOpenRoles
+      ? projects.filter((project) => project.hasOpenRole())
+      : projects;
+
     return sendResponse(res, 200, "Projects fetched", { projects: visibleProjects });
   } catch (error) {
     return next(error);
@@ -39,7 +59,8 @@ const getProjectById = async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.id)
       .populate("owner", "fullName email phoneNumber profileImage")
-      .populate("members.user", "fullName email phoneNumber profileImage");
+      .populate("members.user", "fullName email phoneNumber profileImage")
+      .populate("joinRequests.user", "fullName email phoneNumber profileImage");
 
     if (!project) {
       return sendResponse(res, 404, "Project not found", {});
@@ -49,6 +70,11 @@ const getProjectById = async (req, res, next) => {
     const isMember = req.user
       ? project.members.some((member) => member.user._id.toString() === req.user._id.toString())
       : false;
+    const userJoinRequest = req.user
+      ? project.joinRequests.find(
+          (request) => request.user?._id?.toString() === req.user._id.toString()
+        )
+      : null;
 
     if (!isOwner && !isMember) {
       if (project.owner) {
@@ -61,9 +87,13 @@ const getProjectById = async (req, res, next) => {
           member.user.phoneNumber = undefined;
         }
       });
+      project.joinRequests = [];
     }
 
-    return sendResponse(res, 200, "Project fetched", { project });
+    return sendResponse(res, 200, "Project fetched", {
+      project,
+      userJoinRequest,
+    });
   } catch (error) {
     return next(error);
   }
@@ -185,6 +215,48 @@ const respondToJoinRequest = async (req, res, next) => {
   }
 };
 
+const updateProject = async (req, res, next) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) {
+      return sendResponse(res, 404, "Project not found", {});
+    }
+    if (project.owner.toString() !== req.user._id.toString()) {
+      return sendResponse(res, 403, "Only owner can update", {});
+    }
+
+    const allowedFields = ["title", "description", "projectStatus", "isVisible"];
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        project[field] = req.body[field];
+      }
+    });
+
+    if (Array.isArray(req.body.requiredRoles)) {
+      const existingByRole = new Map(
+        project.requiredRoles.map((role) => [role.roleName, role])
+      );
+      project.requiredRoles = req.body.requiredRoles.map((role) => {
+        const existing = existingByRole.get(role.roleName);
+        const filled = existing?.filledPositions || 0;
+        const openings = Number(role.numberOfOpenings || 1);
+        return {
+          roleName: role.roleName,
+          requiredSkills: role.requiredSkills || [],
+          numberOfOpenings: openings,
+          filledPositions: Math.min(filled, openings),
+        };
+      });
+      project.updateStatusForRoles();
+    }
+
+    await project.save();
+    return sendResponse(res, 200, "Project updated", { project });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 const completeProject = async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.id);
@@ -232,6 +304,7 @@ module.exports = {
   getProjectById,
   joinProject,
   respondToJoinRequest,
+  updateProject,
   completeProject,
   archiveProject,
 };

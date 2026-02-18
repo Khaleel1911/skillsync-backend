@@ -7,11 +7,12 @@ const {
   getProjectById,
   joinProject,
   respondToJoinRequest,
+  updateProject,
   completeProject,
   archiveProject,
 } = require("../controllers/projectController");
 const validateRequest = require("../middlewares/validateRequest");
-const { protect } = require("../middlewares/authMiddleware");
+const { protect, optionalProtect } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
@@ -29,7 +30,8 @@ router.post(
 
 router.get("/", listProjects);
 router.get("/match/:userId", matchProjects);
-router.get("/:id", getProjectById);
+router.get("/:id", optionalProtect, getProjectById);
+router.put("/:id", protect, updateProject);
 
 router.post(
   "/:id/join",

@@ -42,5 +42,29 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = { protect };
+const optionalProtect = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization || "";
+    if (!authHeader.startsWith("Bearer ")) {
+      return next();
+    }
+
+    const token = authHeader.split(" ")[1];
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      return next();
+    }
+
+    const decoded = jwt.verify(token, secret);
+    const user = await User.findById(decoded.id);
+    if (user && user.isActive) {
+      req.user = user;
+    }
+    return next();
+  } catch (error) {
+    return next();
+  }
+};
+
+module.exports = { protect, optionalProtect };
 
